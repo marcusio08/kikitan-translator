@@ -10,5 +10,6 @@ export abstract class Recognizer {
     abstract stop(): void;
     abstract set_lang(lang: string): void;
 
-    abstract onResult(callback: (result: string, final: boolean) => void): void;
+    abstract onResult(callback: (result: string) => void): void;
+    abstract onTranscribing(callback: (status: boolean) => void): void;
 }

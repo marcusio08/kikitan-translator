@@ -11,6 +11,7 @@ export type Config = {
     source_language: string,
     target_language: string,
     translator: number,
+    recognizer: number,
     mode: number,
     language_settings: {
         japanese_omit_questionmark: boolean,
@@ -31,6 +32,7 @@ export const DEFAULT_CONFIG: Config = {
     source_language: "en-US",
     target_language: "ja",
     translator: 0,
+    recognizer: 0,
     mode: 0,
     language_settings: {
         japanese_omit_questionmark: true,
@@ -77,6 +79,11 @@ export function validate_config(config: Config): Config {
 
     if (typeof cfg.target_language === "number") {
         cfg.target_language = langTo[cfg.target_language < 6 ? 0 : cfg.target_language-5].code
+    }
+
+    // Validation 3: Translator can only be 0
+    if (cfg.translator !== 0) {
+        cfg.translator = 0
     }
 
     return cfg

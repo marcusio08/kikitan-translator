@@ -1,42 +1,29 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, Response
-from azure import Azure
-from chatgpt import ChatGPT
+from fastapi import FastAPI, Response, Request
+from transcribers.deepgram import DeepgramTranscriber
 
 import os
 
 load_dotenv()
 
 app = FastAPI()
-azure = Azure(os.getenv("AZURE_REGION"), os.getenv("AZURE_API_KEY"))
-chatgpt = ChatGPT(os.getenv("OPENAI_API_KEY"))
+deepgram = DeepgramTranscriber(os.getenv("DG_API_KEY"))
 
 @app.middleware("http")
 async def add_cors_header(request, call_next):
     response = await call_next(request)
     response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
-@app.get("/translate/{engine}")
-def read_root(engine: str, text: str, src: str, target: str, response: Response):
-    match engine:
-        case "azure":
-            res = azure.translate(text, src, target)
-            if res == None:
-                response.status_code = 500
-                
-                return "Failed to translate."
-            
-            return {
-                "text": res
-            }
-        case "chatgpt":
-            try:
-                return {
-                    "text": chatgpt.translate(text, src, target)["content"]
-                }
-            except Exception as e:
-                print(e)
-                response.status_code = 500
-                
-                return "Failed to translate."
+@app.post("/recognize/deepgram")
+async def whisper_recognize(src: str, request: Request, response: Response):
+    data = deepgram.transcribe(await request.body(), src)
+    print(data)
+
+    return {"transcription": data}
+    
+@app.options("/recognize/deepgram")
+def whisper_recognize():
+    return Response(status_code=200)

@@ -2,6 +2,7 @@ import { Recognizer } from "./recognizer";
 
 export class WebSpeech extends Recognizer {
     recognition: SpeechRecognition;
+    transcribing_callback: ((status: boolean) => void) | null = null;
 
     constructor(lang: string) {
         super(lang);
@@ -75,11 +76,17 @@ export class WebSpeech extends Recognizer {
         }, 500);
     }
 
-    onResult(callback: (result: string, final: boolean) => void) {
+    onResult(callback: (result: string) => void) {
         this.recognition.onresult = (event) => {
             if (event.results.length > 0) {
-                callback(event.results[event.results.length - 1][0].transcript.trim(), event.results[event.results.length - 1].isFinal);
+                callback(event.results[event.results.length - 1][0].transcript.trim());
+
+                if (this.transcribing_callback != null) this.transcribing_callback(!event.results[event.results.length - 1].isFinal);
             }
         }
+    }
+
+    onTranscribing(callback: (status: boolean) => void): void {
+        this.transcribing_callback = callback;
     }
 }

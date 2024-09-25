@@ -198,7 +198,11 @@ function App() {
         {settingsVisible &&
           <div className={'transition-all z-20 w-full h-screen flex backdrop-blur-sm bg-transparent justify-center items-center absolute' + (settingsVisible ? " opacity-100" : " opacity-0 pointer-events-none")}>
             <div className='flex flex-col justify-between  w-10/12 h-5/6 outline outline-2 outline-white rounded bg-white'>
-              <SettingsPage lang={lang!} config={config} setConfig={setConfig} closeCallback={() => setSettingsVisible(false)} />
+              <SettingsPage lang={lang!} config={config} setConfig={setConfig} closeCallback={() => {
+                setLoaded(false)
+
+                setTimeout(() => window.location.reload(), 250)
+              }} />
             </div>
           </div>
         }

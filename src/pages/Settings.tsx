@@ -106,17 +106,16 @@ export default function Settings({ closeCallback, config, setConfig, lang }: Set
                         <MenuItem key={"male"} value={0}>♂</MenuItem>
                         <MenuItem key={"female"} value={1}>♀</MenuItem>
                     </Select>} />
-                    <FormControlLabel label={localization.primary_translation_engine[lang]} control={<Select className="ml-2 mr-4 mt-2" value={config.translator} onChange={(e) => {
+                    <FormControlLabel label={localization.voice_recognizer[lang]} control={<Select className="ml-2 mr-4 mt-2" value={config.recognizer} onChange={(e) => {
                         setConfig({ 
                             ...config, 
-                            translator: parseInt(e.target.value.toString())
+                            recognizer: parseInt(e.target.value.toString())
                         })
                     }}>
-                        <MenuItem key={"google"} value={0}>Google</MenuItem>
-                        <MenuItem key={"azure"} value={1}>Azure</MenuItem>
-                        <MenuItem key={"azure"} value={2}>ChatGPT</MenuItem>
+                        <MenuItem key={"webspeech"} value={0}>WebSpeech</MenuItem>
+                        <MenuItem key={"deepgram"} value={1}>Deepgram</MenuItem>
                     </Select>} />
-                    <p className="text-sm italic">* {localization.translation_engine_note[lang]}</p>
+                    <p className="text-sm italic">* {localization.voice_recognize_notes[lang]}</p>
                 </FormGroup>
             </CustomTabPanel>
             <CustomTabPanel className="flex" value={page} index={1}>

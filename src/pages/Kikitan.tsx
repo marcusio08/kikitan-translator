@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { Select, MenuItem, Button } from "@mui/material"
+import { Select, MenuItem, Button, CircularProgress } from "@mui/material"
 
 import {
     X as XIcon,
@@ -17,11 +17,12 @@ import { calculateMinWaitTime, Lang, langSource, langTo } from "../util/constant
 
 import { Config } from "../util/config";
 import { Recognizer } from "../recognizers/recognizer";
-import { WebSpeech } from "../recognizers/WebSpeech";
 
-import translateAZ from "../translators/azure";
+import { WebSpeech } from "../recognizers/WebSpeech";
+import { Deepgram } from "../recognizers/Deepgram"
+
 import translateGT from '../translators/google_translate';
-import translateGPT from "../translators/chatgpt";
+import { localization } from "../util/localization";
 
 type KikitanProps = {
     ovr: boolean;
@@ -36,10 +37,11 @@ let sr: Recognizer | null = null;
 let detectionQueue: string[] = []
 let lock = false
 
-const translators = [translateGT, translateAZ, translateGPT]
+const translators = [translateGT]
+const recognizers = [WebSpeech, Deepgram]
 
 export default function Kikitan({ ovr, vrc, config, setConfig, ws, lang }: KikitanProps) {
-    const [detecting, setDetecting] = React.useState(true)
+    const [detecting, setDetecting] = React.useState(false)
 
     const [detection, setDetection] = React.useState("")
     const [translated, setTranslated] = React.useState("")
@@ -129,13 +131,16 @@ export default function Kikitan({ ovr, vrc, config, setConfig, ws, lang }: Kikit
                 });
             }, 1000)
 
-            sr = new WebSpeech(sourceLanguage)
+            sr = new recognizers[config.recognizer](sourceLanguage)
 
-            sr.onResult((result: string, isFinal: boolean) => {
+            sr.onResult((result: string) => {
                 if (config.mode == 1 || config.vrchat_settings.send_typing_while_talking) invoke("send_typing", { address: config.vrchat_settings.osc_address, port: `${config.vrchat_settings.osc_port}` })
     
                 setDetection(result)
-                setDetecting(!isFinal)
+            })
+
+            sr.onTranscribing(status => {
+                setDetecting(status)
             })
 
             sr.start()
@@ -182,8 +187,13 @@ export default function Kikitan({ ovr, vrc, config, setConfig, ws, lang }: Kikit
     return <>
         <div className="flex align-middle">
             <div>
-                <div className={`mr-16 w-96 h-48 outline outline-2 outline-slate-400 rounded-md font-bold text-center ${detecting ? "text-slate-700 italic" : "text-black"}`}>
-                    <p className="align-middle">{detection}</p>
+                <div className={`relative mr-16 z-0 w-96 h-48 outline outline-2 outline-slate-400 rounded-md font-bold text-center ${detecting ? "text-slate-700 italic" : "text-black"}`}>
+                    <div className={`absolute -z-10 w-96 h-48 bg-slate-100 ${(detecting && config.recognizer != 0) || false ? "opacity-20" : "opacity-0"}`}></div>
+                    <p className="absolute z-10 w-96 h-48 align-center">{detection}</p>
+                    <div className={`w-96 ${(detecting && config.recognizer != 0) || false ? "opacity-100" : "opacity-0"}`}>
+                        <CircularProgress className="mt-[3rem]"></CircularProgress>
+                        <p>{localization.transcribing[lang]}</p>
+                    </div>
                 </div>
                 <div className="flex">
                     <Select className="mt-4 ml-auto h-14" value={sourceLanguage} onChange={(e) => {
